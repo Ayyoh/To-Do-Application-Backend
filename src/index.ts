@@ -14,7 +14,7 @@ app.get("/", (c) => {
 });
 
 app.use("/api/todo/*", authMiddleware);
-app.use("*"), cors();
+app.use("*", cors({ origin: "*" }));
 
 app.route("/api/users", userRouter);
 app.route("/api/folders", folderRouter);
