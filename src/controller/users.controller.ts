@@ -6,10 +6,46 @@ import { eq } from "drizzle-orm";
 import { comparePassword, hashPassword } from "../utils/hash.js";
 import { deleteCookie, setCookie } from "hono/cookie";
 
-import jwtImports from "jsonwebtoken";
+import jwtImports, { verify } from "jsonwebtoken";
 const { sign } = jwtImports;
 
-export const getAllUsers = async (c: Context) => {};
+export const getAllUsers = async (c: Context) => {
+  try {
+    const data = await db.select().from(usersTable);
+    return c.json(data);
+  } catch (error) {
+    console.log("error in getAllUsers: ", error);
+  }
+};
+
+export const meAuth = async (c: Context) => {
+  try {
+    const authHeader = c.req.header("authorization");
+    if (!authHeader) {
+      return c.json({ error: "No token provided" }, 401);
+    }
+
+    const token = authHeader.split(" ")[1];
+    const payload = await verify(token, process.env.JWT_SECRET!);
+
+    if (typeof payload === "string" || !("id" in payload)) {
+      return c.json({ error: "Invalid token payload" }, 401);
+    }
+
+    const userId = payload.id;
+
+    const [user] = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.id, payload.id));
+
+    if (!user) return c.json({ error: "user not found" }, 404);
+
+    return c.json(user)
+  } catch (error) {
+    console.log("error in meAuth: ", error);
+  }
+};
 
 export const register = async (c: Context) => {
   try {
