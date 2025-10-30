@@ -46,6 +46,13 @@ export const register = async (c: Context) => {
       return c.json({ error: "email already exists" }, 400);
     }
 
+    if (password.length < 8) {
+      return c.json(
+        { error: "password must be at least 8 characters long" },
+        409
+      );
+    }
+
     const hashed = await hashPassword(password);
     const user = await db
       .insert(usersTable)
