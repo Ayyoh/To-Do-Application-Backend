@@ -4,10 +4,10 @@ import { db } from "../db/drizzle.js";
 import { usersTable } from "../db/schema.js";
 import { eq } from "drizzle-orm";
 import { comparePassword, hashPassword } from "../utils/hash.js";
-import { deleteCookie, setCookie } from "hono/cookie";
+import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 
-import jwtImports, { verify } from "jsonwebtoken";
-const { sign } = jwtImports;
+import jwtImports from "jsonwebtoken";
+const { sign, verify } = jwtImports;
 
 export const getAllUsers = async (c: Context) => {
   try {
@@ -20,30 +20,16 @@ export const getAllUsers = async (c: Context) => {
 
 export const meAuth = async (c: Context) => {
   try {
-    const authHeader = c.req.header("authorization");
-    if (!authHeader) {
-      return c.json({ error: "No token provided" }, 401);
-    }
+    const token = getCookie(c, "token");
+    if (!token) return c.json({ error: "No token found" }, 401);
 
-    const token = authHeader.split(" ")[1];
-    const payload = await verify(token, process.env.JWT_SECRET!);
+    const decoded = verify(token, process.env.JWT_SECRET!);
+    c.set("user", decoded);
 
-    if (typeof payload === "string" || !("id" in payload)) {
-      return c.json({ error: "Invalid token payload" }, 401);
-    }
-
-    const userId = payload.id;
-
-    const [user] = await db
-      .select()
-      .from(usersTable)
-      .where(eq(usersTable.id, payload.id));
-
-    if (!user) return c.json({ error: "user not found" }, 404);
-
-    return c.json(user)
+    return c.json(decoded);
   } catch (error) {
-    console.log("error in meAuth: ", error);
+    console.error("error in meAuth:", error);
+    return c.json({ error: "Unauthorized or invalid token" }, 401);
   }
 };
 
@@ -69,6 +55,7 @@ export const register = async (c: Context) => {
     return c.json({ message: "user registered", data: user }, 201);
   } catch (error) {
     console.log("error in signing up: ", error);
+    return c.json({ error: "Failed in register" }, 500);
   }
 };
 
@@ -103,6 +90,7 @@ export const login = async (c: Context) => {
     return c.json({ message: "Login successful", token });
   } catch (error) {
     console.log("error in signing in: ", error);
+    return c.json({ error: "Failed in logging in" }, 500);
   }
 };
 

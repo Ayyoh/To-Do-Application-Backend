@@ -13,8 +13,16 @@ app.get("/", (c) => {
   return c.text("Hello Hono!");
 });
 
+app.use(
+  "*",
+  cors({
+    origin: process.env.FRONTEND_API_URL || "http://localhost:3000",
+    credentials: true,
+    allowHeaders: ["Content-type", "Authorization"],
+    allowMethods: ["GET", "POST", "DELETE", "PUT", "OPTIONS"],
+  })
+);
 app.use("/api/todo/*", authMiddleware);
-app.use("*", cors({ origin: "*" }));
 
 app.route("/api/users", userRouter);
 app.route("/api/folders", folderRouter);
