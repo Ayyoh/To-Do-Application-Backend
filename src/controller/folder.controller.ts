@@ -2,12 +2,27 @@ import { Context } from "hono";
 import { db } from "../db/drizzle.js";
 import { foldersTable } from "../db/schema.js";
 import { eq } from "drizzle-orm";
+import { getCookie } from "hono/cookie";
+
+import jwtImport from "jsonwebtoken";
+const { verify } = jwtImport;
 
 export const getAllFolders = async (c: Context) => {
   try {
-    const data = await db.select().from(foldersTable);
+    const token = getCookie(c, "token");
+    if (!token) {
+      return c.json({ error: "No Token" }, 401);
+    }
 
-    return c.json(data);
+    const decoded = verify(token, process.env.JWT_SECRET!);
+    const userId = (decoded as { id: number }).id;
+
+    const folders = await db
+      .select()
+      .from(foldersTable)
+      .where(eq(foldersTable.userId, userId));
+
+    return c.json({ folders }, 200);
   } catch (error) {
     console.log("error in getAllFolders: ", error);
   }
@@ -51,7 +66,7 @@ export const removeFolder = async (c: Context) => {
       .returning();
 
     if (data.length <= 0) {
-      return c.json({ error: "Folder doesnt exist" }, 409)
+      return c.json({ error: "Folder doesnt exist" }, 409);
     }
 
     return c.json({ message: "Folder removed successfully", removed: data });
