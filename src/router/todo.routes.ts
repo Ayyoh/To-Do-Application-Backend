@@ -1,12 +1,15 @@
 import { Hono } from "hono";
 import {
   createToDoList,
-  getAllToDoList,
+  getAllTodoList,
+  getAllToDoListFromFolder,
   removeToDoList,
 } from "../controller/todo.controller.js";
 
 export const todoRouter = new Hono();
 
-todoRouter.get("/", getAllToDoList);
+todoRouter.get("/todos", getAllTodoList);
+todoRouter.get("/folders/:folderId/todos", getAllToDoListFromFolder);
+
 todoRouter.post("/create-todo", createToDoList);
 todoRouter.delete("/remove-todo/:id", removeToDoList);

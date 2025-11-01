@@ -1,13 +1,53 @@
 import { Context } from "hono";
 import { db } from "../db/drizzle.js";
 import { todoTable } from "../db/schema.js";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
+import { getCookie } from "hono/cookie";
+
+import jwtImports from "jsonwebtoken";
+const { verify } = jwtImports;
 
 // GET ALL DATA
-export const getAllToDoList = async (c: Context) => {
+export const getAllTodoList = async (c: Context) => {
   try {
-    const data = await db.select().from(todoTable);
-    return c.json(data);
+    const token = getCookie(c, "token");
+    if (!token) return c.json({ error: "No Token" }, 401);
+
+    const decoded = verify(token, process.env.JWT_SECRET!);
+    const userId = (decoded as { id: number }).id;
+
+    // Get ALL todos of the user
+    const todos = await db
+      .select()
+      .from(todoTable)
+      .where(eq(todoTable.userId, userId));
+
+    return c.json({ todos }, 200);
+  } catch (error) {
+    console.log("error in getAllTodos:", error);
+    return c.json({ error: "Server error" }, 500);
+  }
+};
+
+export const getAllToDoListFromFolder = async (c: Context) => {
+  try {
+    const token = getCookie(c, "token");
+    if (!token) {
+      return c.json({ error: "No Token" }, 401);
+    }
+
+    const decoded = verify(token, process.env.JWT_SECRET!);
+    const userId = (decoded as { id: number }).id;
+    const folderId = Number(c.req.param("folderId"));
+
+    const todos = await db
+      .select()
+      .from(todoTable)
+      .where(
+        and(eq(todoTable.folderId, folderId), eq(todoTable.userId, userId))
+      );
+
+    return c.json({ todos }, 200);
   } catch (error) {
     console.log("error in fetching all data from todo list: ", error);
   }
