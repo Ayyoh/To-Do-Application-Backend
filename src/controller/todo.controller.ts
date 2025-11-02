@@ -56,8 +56,14 @@ export const getAllToDoListFromFolder = async (c: Context) => {
 // CREATE A DATA
 export const createToDoList = async (c: Context) => {
   try {
+    const token = getCookie(c, "token");
+    if (!token) return c.json({ error: "No Token" }, 401);
+
+    const decoded = verify(token, process.env.JWT_SECRET!);
+    const userId = (decoded as { id: number }).id;
+
     const data = await c.req.json();
-    const { title, description, completed, folderId, userId } = data;
+    const { title, description, completed, folderId } = data;
 
     if (!data) {
       return c.json({ error: "Required Missing Fields" }, 409);
@@ -70,7 +76,7 @@ export const createToDoList = async (c: Context) => {
         description,
         completed,
         folderId: folderId === "" ? null : Number(folderId),
-        userId: userId ? Number(userId) : null,
+        userId
       })
       .returning();
 
