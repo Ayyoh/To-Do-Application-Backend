@@ -16,7 +16,7 @@ app.get("/", (c) => {
 app.use(
   "*",
   cors({
-    origin: process.env.FRONTEND_API_URL || "http://localhost:3000",
+    origin: process.env.FRONTEND_API_URL || "http://localhost:5173",
     credentials: true,
     allowHeaders: ["Content-type", "Authorization"],
     allowMethods: ["GET", "POST", "DELETE", "PUT", "OPTIONS"],
