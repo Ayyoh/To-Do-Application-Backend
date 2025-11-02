@@ -7,11 +7,6 @@ const { verify } = jwtImports;
 
 export const authMiddleware = async (c: Context, next: Next) => {
   try {
-    const authHeader = c.req.header("Authorization");
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return c.json({ error: "Unauthorizeddd" }, 401);
-    }
-
     const token = getCookie(c, "token");
 
     if (!token) {
