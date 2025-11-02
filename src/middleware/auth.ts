@@ -7,6 +7,11 @@ const { verify } = jwtImports;
 
 export const authMiddleware = async (c: Context, next: Next) => {
   try {
+    const authHeader = c.req.header("Authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return c.json({ error: "Unauthorizeddd" }, 401);
+    }
+
     const token = getCookie(c, "token");
 
     if (!token) {
@@ -19,6 +24,6 @@ export const authMiddleware = async (c: Context, next: Next) => {
     await next(); // ✅ just continue normally
   } catch (error) {
     console.log("error in authentication middleware: ", error);
-    return c.json({ error: "Unauthorized or invalid token" }, 401)
+    return c.json({ error: "Unauthorized or invalid token" }, 401);
   }
 };
