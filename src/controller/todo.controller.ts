@@ -65,7 +65,7 @@ export const createToDoList = async (c: Context) => {
     const data = await c.req.json();
     const { title, description, completed, folderId } = data;
 
-    if (!data) {
+    if (!title) {
       return c.json({ error: "Required Missing Fields" }, 409);
     }
 
@@ -75,7 +75,7 @@ export const createToDoList = async (c: Context) => {
         title,
         description,
         completed,
-        folderId: folderId === "" ? null : Number(folderId),
+        folderId: folderId ? Number(folderId) : null,
         userId
       })
       .returning();
