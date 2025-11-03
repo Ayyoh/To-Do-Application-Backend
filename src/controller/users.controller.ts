@@ -91,7 +91,7 @@ export const login = async (c: Context) => {
       maxAge: 60 * 60 * 24, // 1 day
       path: "/",
       sameSite: "Strict",
-      secure: false, // change to true if HTTPS
+      secure: process.env.NODE_ENV === "production", // change to true if HTTPS
     });
 
     return c.json({ message: "Login successful", token });
