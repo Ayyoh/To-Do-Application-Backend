@@ -102,6 +102,10 @@ export const login = async (c: Context) => {
 };
 
 export const logout = (c: Context) => {
-  deleteCookie(c, "token");
+  deleteCookie(c, "token", {
+    path: "/",
+    sameSite: "None",
+    secure: true
+  });
   return c.json({ message: "Logged out" });
 };
